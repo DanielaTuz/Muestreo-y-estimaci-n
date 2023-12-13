@@ -1,0 +1,186 @@
+---
+title: "Muestreo de poblaciones y estimación"
+subtitle: "AFDMD-111 Estadística"
+author: "Daniela Citalli Tuz Lopez"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    highlight: kate
+    cards: false
+---
+
+```{r setup, include=FALSE}
+#library(highcharter)
+library(TeachingSampling)
+# invalidate cache when the tufte version changes
+```
+
+
+
+
+# Introducción
+
+En estadística, los conceptos de población y muestra son sumamente importantes. Población se refiere al conjunto de todos los sujetos de interés, por ejemplo, al estudiar la edad de los estudiantes de la UQRoo Cancún, la población son todos los estudiantes del campus. Muestra, por otro lado, se refiere a un subconjunto de la población. Por ejemplo, los estudiantes que se encuentran en horario de 07:00-09:00 am, los estudiantes que se encuentran en la biblioteca, etc. Usualmente es muy común estudiar a las muestras y entonces para tomar muestras se consideran dos tipos de muestreo.
+
+- Muestreo aleatorio.
+- Muestreo no aleatorio.
+
+
+# Muestreo aleatorio
+
+Existen varios tipos de muestreo aleatorio, entre los cuales encontramos:
+
+- Muestreo aleatorio simple.
+- Muestreo sistemático.
+- Muestreo estratificado.
+- Muestreo de Poisson.
+
+## Muestreo aleatorio simple.
+
+El muestreo se puede realizar mediante el comando `sample`. Por ejemplo una muestra de tamaño $50$ de las primeras $15$ letras minúsculas del abecedario se realiza y grafica como:
+
+```{r sampSR}
+m <- as.factor(sample(letters[1:15], 50, replace=T))
+plot(m, col = "#EE3B3B")
+```
+
+Nótese que el comando `sample` tiene como parámetros `replace` y `prob`. 
+
+1. ¿Qué sucede si `replace=FALSE` en código anterior?.
+
+R= el codigo arrojara fallara por que no puede procesar los limites de letras de 15.
+
+```{r}
+m <- as.factor(sample(letters[1:15], 50, replace=T)) #False
+plot(m, col = "#EE3B3B")
+
+#Error in `sample.int()`:! cannot take a sample larger than the population when 'replace = FALSE'
+```
+
+2. ¿Cuál es la diferencia entre `sample(letters[1:10],10, replace=T)` y `sample(letters[1:10],10)`?
+
+R= Debido a que permite el reemplazo, "muestra(letras[1:10], 10, reemplazo = T)" puede producir duplicados en la muestra, pero "muestra(letras[1:10], 10)" no producirá duplicados porque realiza el muestreo sin reemplazo.
+
+```{r}
+set.seed(123)
+m_with_replace <- as.factor(sample(letters[1:10], 10, replace = TRUE))
+m_without_replace <- as.factor(sample(letters[1:10], 10))
+
+
+plot(m_with_replace, col = "#EE3B3B", main = "Muestra con Reemplazo")
+
+
+plot(m_without_replace, col = "#EE3B3B", main = "Muestra sin Reemplazo")
+
+```
+
+3. ¿Y entre `sample(letters[1:6], 10, prob=c(0.5,0.1,0.1,0.1,0.1,0.1), replace = T)` y `sample(letters[1:6], 10, replace=T)`?
+
+R= R= en un ejemplo en el que la letra "a" tiene una probabilidad de 0.5 de ser elegida, mientras que las letras "b" a "f" tienen una probabilidad de 0.1 de ser elegidas.
+
+Sin embargo, en el ejemplo (letras[1:6], 10, reemplazo=T), cada letra tiene la misma probabilidad de ser elegida en cada iteración.
+
+
+```{r}
+set.seed(123)
+m_con_prob <- as.factor(sample(letters[1:6], 10, prob = c(0.5, 0.1, 0.1, 0.1, 0.1, 0.1), replace = TRUE))
+m_sin_prob <- as.factor(sample(letters[1:6], 10, replace = TRUE))
+
+# Plot para m_con_prob
+plot(m_con_prob, col = "#4CAF50", main = "Muestra con Probabilidades")
+
+# Plot para m_sin_prob
+plot(m_sin_prob, col = "#4CAF50", main = "Muestra sin Probabilidades")
+
+```
+
+
+
+## Muestreo sistemático
+
+El muestreo sistemático funciona comenzando por un punto inicial aleatorio y de allá avanzando sistemáticamente un número fijo de pasos $a$ hasta llegar a $N$. Para ello se utiliza el comando `S.Sy` del paquete `TeachingSampling` (en caso de no tener instalado el paquete instalarlo con `install.packages("TeachingSampling")`). Ahora mostraremos el proceso de muestrear las misma letras del abecedario.
+
+
+```{r muesSys}
+índices <- S.SY(26,4)
+letters[índices]
+# Los índices que se tomaron son:
+índices # Nótese que se inició aleatoriamente con 4 y de allá avanzo 4 unidades.
+```
+- Realice una muestra sistemática de la variable del dataset `starwars` (puede cargarlo con `data(starwars)`) y calcule la media de la altura (`height`) y la masa (`mass`).
+```{r}
+data(starwars)
+tamano_muestra <- 10
+muestra <- starwars %>% 
+  slice(seq(1, n(), by = tamano_muestra))
+media_altura <- mean(muestra$height, na.rm = TRUE)
+media_masa <- mean(muestra$mass, na.rm = TRUE)
+print(paste("Media de la altura en la muestra: ", round(media_altura, 2)))
+print(paste("Media de la masa en la muestra: ", round(media_masa, 2)))
+```
+
+
+- Realice un muestreo aleatorio simple usando sin reemplazo `sample` y calcule la media de la altura (`height`) y la masa (`mass`).
+```{r}
+data(starwars)
+tamano_muestra <- 10
+muestra <- starwars[sample(1:nrow(starwars), tamano_muestra, replace = FALSE), ]
+media_altura <- mean(muestra$height, na.rm = TRUE)
+media_masa <- mean(muestra$mass, na.rm = TRUE)
+
+```
+
+
+## Muestreo estratificado
+
+Investigue el concepto de muestreo estratificado y realice un ejemplo con el comando `S.STPPS`. Nota: es muy importante crear un estrato o subgrupo.
+
+el comando `S.STPPS` es un comando irregular de R
+
+```{r}
+# Ejemplo de datos ficticios (reemplaza con tus propios datos)
+set.seed(123)
+total_population <- 1000
+male <- sample(c(TRUE, FALSE), total_population, replace = TRUE)
+age <- sample(18:80, total_population, replace = TRUE)
+lower_age <- 30
+upper_age <- 60
+middle_age <- 50
+prop_sample <- 0.2
+
+# Crear factores
+id_masculino <- factor(ifelse(male, 1, 0))
+id_30_60 <- factor(ifelse((age >= lower_age) & (age < upper_age), 1, 0))
+id_mas_60 <- factor(ifelse((age >= middle_age) & (age < upper_age), 1, 0))
+
+# Calcular tamaño de la muestra
+n <- round(total_population * prop_sample)
+
+# Inicializar vectores de muestra
+muestra_masculino <- numeric(0)
+muestra_30_60 <- numeric(0)
+muestra_mas_60 <- numeric(0)
+
+# Muestreo proporcional en cada estrato
+muestra_masculino <- sample(which(id_masculino == 1), min(n, sum(id_masculino == 1)))
+muestra_30_60 <- sample(which(id_30_60 == 1), min(n, sum(id_30_60 == 1)))
+muestra_mas_60 <- sample(which(id_mas_60 == 1), min(n, sum(id_mas_60 == 1)))
+
+# Combinar muestras de los estratos
+muestreo_estratificado <- c(muestra_masculino, muestra_30_60, muestra_mas_60)
+
+# Fijar semilla para reproducibilidad
+set.seed(123)
+
+# Muestreo estratificado
+muestra_final <- sample(muestreo_estratificado, n, replace = FALSE)
+
+# Verificar tamaño de la muestra
+length(muestra_final)
+
+```
+
+
+Fecha de entrega: Miércoles 6 de diciembre de 2023.
+
+Atte. Dr.Julio César Ramírez Pacheco
